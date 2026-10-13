@@ -1,10 +1,12 @@
-import re, statistics
-t = open('overlock-seams-that-stop-fraying.md', encoding='utf-8').read()
-body = t.split('## Sources and further reading')[0]
+import os, re, statistics
+HERE = os.path.dirname(os.path.abspath(__file__))
+t = open(os.path.join(HERE, 'overlock-seams-that-stop-fraying.md'), encoding='utf-8').read()
+body = t.split('\n## Sources')[0]   # everything before the Sources heading
 words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'’/.%-]*", body)
 print('body words:', len(words))
 print('double quotes:', body.count('"'))
 print('em dash:', body.count('—'), 'en dash:', body.count('–'))
+print('hyphen ranges (should be en dashes):', re.findall(r'\b\d+(?:\.\d+)?-\d+(?:\.\d+)?\b', body))
 print('exclamation:', body.count('!'))
 print('"X to Y" numeric ranges:', len(re.findall(r'\b\d+(?:\.\d+)?\s+to\s+\d+', body)))
 print('word ranges (four to six etc):', re.findall(r'\b(?:one|two|three|four|five|six|seven|eight|nine|ten)\s+to\s+(?:one|two|three|four|five|six|seven|eight|nine|ten)\b', body))

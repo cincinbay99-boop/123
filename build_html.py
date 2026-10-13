@@ -18,30 +18,35 @@ SRC, TPL, OUT = _args.src, _args.template, _args.out
 
 OLD_ID = 'fm-private-label'
 NEW_ID = 'fm-overlock-seams'
-META_DESC = ("Why an overlocked seam still frays, and what stops it: the settings that hold on fabric that sheds, "
-             "how to secure the thread chain at both ends, and when the fabric itself is slipping beside intact stitches.")
+# kept under 160 characters so search engines show it whole
+META_DESC = ("Why an overlocked seam still frays, and what stops it: settings for fabric that sheds, "
+             "securing the chain at both ends, and slippage beside intact stitches.")
+assert len(META_DESC) <= 160, len(META_DESC)
 
 # figure definitions: (class suffix, src, width, height, alt, eager)
+# width/height are the pixel size of the original file (the template carries them on every image);
+# the base figure crops to 3:2 with object-fit:cover, so a square or portrait photo shows its middle band.
 FIG = {
  'hero': ('', 'https://images.pexels.com/photos/7998331/pexels-photo-7998331.jpeg?auto=compress&cs=tinysrgb&w=1600', 5616, 3744,
           'Hands feeding fabric through an overlocker', True),
- 'machine': ('', 'https://images.pexels.com/photos/38561617/pexels-photo-38561617.jpeg?auto=compress&cs=tinysrgb&w=1600', None, None,
+ 'machine': ('', 'https://images.pexels.com/photos/38561617/pexels-photo-38561617.jpeg?auto=compress&cs=tinysrgb&w=1600', 5152, 5152,
           'Close-up of an overlocker threaded with black thread', False),
- 'frayed': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-frayed-raw-edge-on-satin-fabric-b6a473141e.jpg', None, None,
+ 'frayed': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-frayed-raw-edge-on-satin-fabric-b6a473141e.jpg', 2048, 2048,
           'Frayed raw edge on a woven fabric', False),
- 'dials': ('', 'https://images.pexels.com/photos/9850425/pexels-photo-9850425.jpeg?auto=compress&cs=tinysrgb&w=1600', None, None,
-          'Overlocker tension dials and thread spools seen from above', False),
+ # portrait original; the 3:2 crop keeps the dials and loses the spool holders at the bottom, so the alt names only the dials
+ 'dials': ('', 'https://images.pexels.com/photos/9850425/pexels-photo-9850425.jpeg?auto=compress&cs=tinysrgb&w=1600', 4052, 6078,
+          'Tension dials on an overlocker seen from above', False),
  'cones': ('--portrait', 'https://images.pexels.com/photos/7256903/pexels-photo-7256903.jpeg?auto=compress&cs=tinysrgb&w=1200', 4016, 6016,
           'Cones of black thread on an overlocker', False),
- 'presser': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-fine-silk-fabric-under-a-sewing-machine-presser-foot-53d0f6451c.webp', None, None,
+ 'presser': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-fine-silk-fabric-under-a-sewing-machine-presser-foot-53d0f6451c.webp', 1000, 1000,
           'Fabric under a sewing machine presser foot', False),
- 'slippage': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-seam-being-pulled-to-show-slippage-beside-the-stitch-line-41ca44b6cc.jpg', None, None,
+ 'slippage': ('', 'https://www.fashionme.com/wp-content/uploads/2026/09/fm-seam-being-pulled-to-show-slippage-beside-the-stitch-line-41ca44b6cc.jpg', 404, 720,
           'A seam pulled open to show slippage beside the stitch line', False),
- 'wash': ('', 'https://www.fashionme.com/wp-content/uploads/2026/10/Garment-Wash-Test-Reference.jpg', None, None,
+ 'wash': ('', 'https://www.fashionme.com/wp-content/uploads/2026/10/Garment-Wash-Test-Reference.jpg', 1600, 1067,
           'Washing machine drum used for a wash test', False),
  'ripper': ('', 'https://images.pexels.com/photos/32641558/pexels-photo-32641558.jpeg?auto=compress&cs=tinysrgb&w=1600', 6000, 4000,
           'Unpicking a seam with a seam ripper', False),
- 'sewing': ('', 'https://www.fashionme.com/wp-content/uploads/2026/10/Sewing-Seam-Close-Up.jpg', None, None,
+ 'sewing': ('', 'https://www.fashionme.com/wp-content/uploads/2026/10/Sewing-Seam-Close-Up.jpg', 1600, 1068,
           'Sewing machine stitching a seam', False),
 }
 
@@ -56,7 +61,10 @@ PLACE = {
  'without-an-overlocker': {1: 'sewing'},
 }
 
+FIGURES_USED = set()
+
 def fig_html(key):
+    FIGURES_USED.add(key)
     cls, src, w, h, alt, eager = FIG[key]
     attrs = [f'src="{src}"']
     if w: attrs.append(f'width="{w}"'); attrs.append(f'height="{h}"')
@@ -68,10 +76,17 @@ def fig_html(key):
     c = 'fm-article-image' + (f' fm-article-image{cls}' if cls else '')
     return f'<figure class="{c}">\n<img\n  ' + '\n  '.join(attrs) + '>\n</figure>\n'
 
+def smart_quotes(t):
+    # the template's body is typeset with ’ “ ”; the Markdown keeps straight quotes (pandoc does the same conversion for the docx)
+    t = t.replace("'", '’')
+    return re.sub(r'"([^"]*)"', '“\\1”', t)
+
+# [text](url); the URL may contain one level of parentheses, as in wiki/Overlock_(stitch)
+LINK = re.compile(r'\[([^\]]+)\]\((https?://(?:[^()\s]|\([^()\s]*\))+)\)')
+
 def inline(t):
-    t = html.escape(t, quote=False)
-    t = re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)', r'<a href="\2">\1</a>', t)
-    return t
+    t = smart_quotes(html.escape(t, quote=False))
+    return LINK.sub(r'<a href="\2">\1</a>', t)
 
 def slug(s):
     s = re.sub(r"[^a-z0-9 ]", "", s.lower())
@@ -79,6 +94,22 @@ def slug(s):
 
 lines = open(SRC, encoding='utf-8').read().split('\n')
 title = lines[0][2:].strip()
+assert lines[0].startswith('# '), 'first line must be the # title'
+
+# This is a small parser for the subset of Markdown the article uses: # title, ## and ### headings,
+# paragraphs, pipe tables, flat - and 1. lists, [text](url) links. Pandoc (which makes the docx) accepts
+# much more; anything it would render differently is refused here so the two outputs cannot drift apart.
+MARKER = re.compile(r'^(#{2,3} |\||\d+\. |- )')
+for n, ln in enumerate(lines[1:], start=2):
+    if not ln.strip():
+        continue
+    if ln[0].isspace():
+        sys.exit(f'line {n}: indented line (nested list or code block) is not supported')
+    if '`' in ln or '*' in ln or '\\|' in ln:
+        sys.exit(f'line {n}: inline code, emphasis and escaped pipes are not supported')
+    if ln.startswith('#') and not MARKER.match(ln):
+        sys.exit(f'line {n}: only ## and ### headings are supported after the title')
+
 blocks = []  # (kind, payload)
 i = 1
 while i < len(lines):
@@ -93,17 +124,23 @@ while i < len(lines):
         rows = []
         while i < len(lines) and lines[i].startswith('|'):
             cells = [c.strip() for c in lines[i].strip().strip('|').split('|')]
-            if not all(set(c) <= set('-') for c in cells):
+            if not all(c and set(c) <= set(':-') for c in cells):   # skip the |---|:---| separator row
                 rows.append(cells)
             i += 1
+        widths = {len(r) for r in rows}
+        if len(widths) != 1:
+            sys.exit(f'table ending at line {i}: rows have different cell counts {sorted(widths)}')
         blocks.append(('table', rows)); continue
-    m = re.match(r'^(\d+)\. (.*)$', ln)
-    if m or ln.startswith('- '):
+    if re.match(r'^(\d+\. |- )', ln):
         items = []
-        while i < len(lines) and (re.match(r'^(\d+)\. ', lines[i]) or lines[i].startswith('- ')):
+        while i < len(lines) and re.match(r'^(\d+\. |- )', lines[i]):
             items.append(re.sub(r'^(\d+\. |- )', '', lines[i])); i += 1
         blocks.append(('list', items)); continue
-    blocks.append(('p', ln.strip())); i += 1
+    # paragraph: consecutive non-blank lines up to the next blank line or block marker are one paragraph, as in pandoc
+    para = [ln.strip()]; i += 1
+    while i < len(lines) and lines[i].strip() and not MARKER.match(lines[i]):
+        para.append(lines[i].strip()); i += 1
+    blocks.append(('p', ' '.join(para)))
 
 # build sections
 intro, sections = [], []
@@ -118,8 +155,9 @@ for kind, payload in blocks:
         cur['blocks'].append((kind, payload))
 
 def bold_lead(item):
-    m = re.match(r'^([^.]+\.)\s+(.*)$', item)
-    if m and m.group(2):
+    # bold the first sentence: up to the first full stop that is followed by a space (so "2.5 mm" does not end it)
+    m = re.match(r'^(.+?\.)\s+(\S.*)$', item)
+    if m:
         return f'<strong>{inline(m.group(1))}</strong> {inline(m.group(2))}'
     return inline(item)
 
@@ -176,6 +214,10 @@ head = head.replace(f'#{NEW_ID} h1,\n#{NEW_ID} h2{{', f'#{NEW_ID} h1,\n#{NEW_ID}
 head = head.replace(f'#{NEW_ID} h2{{\n  margin-top:0;\n  margin-bottom:24px;\n  font-size:28px;\n  line-height:1.18;\n  letter-spacing:-.025em;\n}}',
  f'#{NEW_ID} h2{{\n  margin-top:0;\n  margin-bottom:24px;\n  font-size:28px;\n  line-height:1.18;\n  letter-spacing:-.025em;\n}}\n\n#{NEW_ID} h3{{\n  margin-top:34px;\n  margin-bottom:16px;\n  font-size:21px;\n  line-height:1.3;\n  letter-spacing:-.015em;\n}}')
 assert f'#{NEW_ID} h3{{' in head, 'h3 rule not inserted'
+# keep an h3 with the paragraph that follows it when printed, as the template does for h2
+head = head.replace(f'  #{NEW_ID} h2{{\n    break-after:avoid;\n  }}',
+                    f'  #{NEW_ID} h2,\n  #{NEW_ID} h3{{\n    break-after:avoid;\n  }}')
+assert f'#{NEW_ID} h3{{\n    break-after:avoid' in head, 'print rule for h3 not inserted'
 
 body = []
 body.append(f'<body>\n\n<div id="{NEW_ID}-stage">\n\n<article id="{NEW_ID}" aria-labelledby="{NEW_ID}-title">\n\n<div class="fm-intro">\n\n<h1 id="{NEW_ID}-title">{html.escape(title)}</h1>\n')
@@ -190,6 +232,10 @@ body.append('</ol>\n\n</nav>\n\n')
 for s in sections:
     body.append(render_section(s))
 body.append('</article>\n\n</div>\n\n</body>\n</html>\n')
+
+# every figure in FIG must have found its place; a paragraph edit that shifts the counts in PLACE would otherwise drop one silently
+missing = set(FIG) - FIGURES_USED
+assert not missing, f'figures not placed (check PLACE against the paragraphs): {sorted(missing)}'
 
 open(OUT, 'w', encoding='utf-8').write(head + '</head>\n\n' + '\n'.join(body))
 print('written', OUT)

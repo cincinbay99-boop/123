@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 首图（开头之后） | https://images.pexels.com/photos/7998331/pexels-photo-7998331.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-hands-feeding-fabric-through-an-overlocker.jpg | Hands feeding fabric through an overlocker |
 | What the stitch is doing… | https://images.pexels.com/photos/38561617/pexels-photo-38561617.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-overlocker-threaded-with-black-thread-close-up.jpg | Close-up of an overlocker threaded with black thread |
-| Settings… | https://images.pexels.com/photos/9850425/pexels-photo-9850425.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-overlocker-tension-dials-and-thread-spools-from-above.jpg | Overlocker tension dials and thread spools seen from above |
+| Settings…（原图是竖图，页面上按 3:2 居中裁切，只露出旋钮） | https://images.pexels.com/photos/9850425/pexels-photo-9850425.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-overlocker-tension-dials-and-thread-spools-from-above.jpg | Tension dials on an overlocker seen from above |
 | Thread（竖图） | https://images.pexels.com/photos/7256903/pexels-photo-7256903.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-cones-of-black-thread-on-an-overlocker.jpg | Cones of black thread on an overlocker |
 | Repairs | https://images.pexels.com/photos/32641558/pexels-photo-32641558.jpeg?auto=compress&cs=tinysrgb&w=2560 | fm-unpicking-a-seam-with-a-seam-ripper.jpg | Unpicking a seam with a seam ripper |
 
